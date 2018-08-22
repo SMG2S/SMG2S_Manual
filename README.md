@@ -1,2 +1,2 @@
 # SMG2S_Manual
-SMG2S Manual
+This is the SMG2S Manual
