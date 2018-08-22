@@ -1,0 +1,190 @@
+\documentclass[letterpaper, 10 pt]{report}
+
+\usepackage{color}
+\usepackage{hyperref}
+\usepackage{listings}
+
+\hypersetup{
+	colorlinks,
+	linktoc=all,
+	citecolor=black,
+	filecolor=black,
+	linkcolor=black,
+	urlcolor=black
+}
+
+% -------------------------------------------------------------------------------------
+% BEGIN DOCUMENT
+% -------------------------------------------------------------------------------------
+\begin{document}
+	\title{SMG2S User Manual}
+	\author{Xinzhe Wu}
+	\maketitle
+	\pagestyle{empty}
+	
+	% -------------------------------------------------------------------------------------
+	% TABLE OF CONTENTS
+	% -------------------------------------------------------------------------------------
+	\tableofcontents
+	\newpage
+	\thispagestyle{empty}
+	\mbox{}
+	
+	% -------------------------------------------------------------------------------------
+	% INTRODUCTION
+	% -------------------------------------------------------------------------------------
+	\chapter{Introduction}
+	
+	\section{Getting Started}
+	SMG2S (Scalable Matrix Generator with Given Spectrum) is a software which provides to generator the non-Hermitian Matrices with User-customized eigenvalues. SMG2S is implemented in parallel based on MPI (Message Passing Interface) and C++11 to support efficiently the generation of test matrices on distributed memory platforms.
+
+	Iterative linear algebra methods are important for the applications in various fields. The analysis of the iterative method behaviors is complex, and it is necessary to evaluate their convergence to solve extremely large non-Hermitian eigenvalue and linear problems on parallel and/or distributed machines. This convergence depends on the properties of spectra. Thus, we propse SMG2S to generate large matrices with known spectra to benchmark these methods. The generated matrices are non-Hermitian and non-trivial, with very high dimension. SMG2S can generate the non-Hermitian matrices with user-custormized eigenvalues. 
+	
+	The ability of SMG2S to keep the accuracy of given spectrum can be verified by the functionality proposed inside SMG2S. This function is based the shift inverse power method. SMG2S gives also an graphic user interface to compare the given and final spectral distribution for the verification.
+
+	We will describe the following subset of the SMG2S.
+	\begin{itemize}
+		\item \textbf{Parallel Vector and Matrix:}
+		\item \textbf{Nilpotency Matrix Object:}
+		\item \textbf{Generating Matrix with predescribed eigenvalues:}
+		\item \textbf{Interface to Other Languages/Libraries:}
+		\item \textbf{Verification of Eigenvalues of Generated Matrix:}
+	\end{itemize}
+
+	\section{Installation}
+	To obtain SMG2S, please follow the instructions at the SMG2S download page: https://github.com/brunowu/SMG2S.
+	
+	\textbf{Prerequisites}:
+	
+	\begin{itemize}
+		\item C++ Compiler with \textbf{c++11} support;
+		\item Cmake (version minimum 3.6);
+		\item (Optional) PETSc and SLPEc are necessary for the verification of the ability to keep the given spectrum.
+	\end{itemize}
+	
+	Int the main directory:
+	
+	\begin{lstlisting}[language=bash,frame=single]
+   cmake .  -DCMAKE_INSTALL_PREFIX=${INSTALL_DIRECTORY}
+	\end{lstlisting}
+	
+	The \textcolor{blue}{main.cpp} will generate an exectutable smg2s.exe to demonstrate a minimum sample :
+
+	\begin{lstlisting}[language=bash, frame=single]
+   make
+	\end{lstlisting}
+
+	The main part of SMG2S is a colllection of header files. Install the header files into \$\{INSTALL\_DIRECTORY\}
+
+	\begin{lstlisting}[language=bash,frame=single]
+   make install
+	\end{lstlisting}
+
+	For testing:
+	
+	\begin{lstlisting}[language=bash,frame=single]
+   make test
+	\end{lstlisting}
+	
+	The output of test should be like:
+\begin{lstlisting}[frame=single]
+   Running tests...
+   Test project /User/name/SMG2S
+   Start 1: Test_Size_10000_w_proc1
+   1/4 Test #1: Test_Size_10000_w_proc1 .. Passed 1.20 sec
+   Start 2: Test_Size_20000_w_proc2
+   2/4 Test #2: Test_Size_20000_w_proc2 .. Passed 1.22 sec
+   Start 3: Test_Size_10000_s_proc1
+   3/4 Test #3: Test_Size_10000_s_proc1 .. Passed 1.20 sec
+   Start 4: Test_Size_10000_s_proc2
+   4/4 Test #4: Test_Size_10000_s_proc2 .. Passed 0.66 sec
+
+   100% tests passed, 0 tests failed out of 4
+
+   Total Test time (real) =   4.29 sec
+\end{lstlisting}
+
+
+	\section{Copyright and Licensing of SMG2S}
+	
+	SMG2S is a open source software published under the GNU Lesser General Public License v3.0. SMG2S can be redistributed and modified under the terms of this license.
+	
+	SMG2S is free software: you can redistribute it and/or modify
+	it under the terms of the GNU Lesser General Public License as published
+	by the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+	SMG2S is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU Lesser General Public License for more details.
+	You should have received a copy of the GNU Lesser General Public License
+	along with SMG2S.  If not, see <http://www.gnu.org/licenses/>.
+	
+	\section{Referencing SMG2S}
+	
+	@article\{galichergenerate, title=\{Generate Very Large Sparse Matrices Starting from a Given Spectrum\},  author=\{Galicher, Herv{\'e} and Boillod-Cerneux, France and Petiton, Serge and Calvin, Christophe\}
+	\}
+	\section{Directory Structure}
+	\section{List of SMG2S Developers}
+	
+	Hmmm.
+	\newpage
+	
+	% -------------------------------------------------------------------------------------
+	%SMG2S Parallel Matrix and Vector
+	% -------------------------------------------------------------------------------------
+	\chapter{Templated  SMG2S Parallel Matrix and Vector}
+	\section{Parallel Vector}
+	\subsection{Vector Map}
+	\subsection{Creating a Distributed Vector}
+	
+	\subsection{Parallel Matrix}
+	\subsection{Matrix Map}
+	\subsection{Creating a Distributed Matrix}
+	
+	\newpage
+		% -------------------------------------------------------------------------------------
+	%SMG2S Parallel Matrix and Vector
+	% -------------------------------------------------------------------------------------
+	\chapter{Templated  Nilpotency Matrix Object}
+	\section{Introduction}
+	\section{Creating a Nilpotency Matrix Object}
+	\section{Different Types of Nilpotency Matrix}
+	\section{Parameter Validation for Nilpotency Matrix}
+
+	\newpage
+
+	% -------------------------------------------------------------------------------------
+	% Generate Matrix with SMG2S
+	% -------------------------------------------------------------------------------------
+	\chapter{Generating Matrix with SMG2S}
+	\section{Generation Workflow}
+	\section{Example}
+	Silly daemons
+	\newpage
+	
+	% -------------------------------------------------------------------------------------
+	% Interface
+	% -------------------------------------------------------------------------------------
+	\chapter{Interface to Other Languages/Libraries}
+	\section{Interface to C}
+	\section{Interface to Python}
+	\section{Interface to PETSc}
+	\section{Interface to Trilinos/Teptra}
+	Silly daemons
+	\newpage
+
+	% -------------------------------------------------------------------------------------
+	% Verification
+	% -------------------------------------------------------------------------------------
+	\chapter{Verification of Eigenvalues}
+	\section{Prerequisites}
+	\section{Verifcation by Shifted Inverse Power Method}
+	\section{Script for result cleaning}
+	\section{Plot by Graphic User Interface}
+	Silly daemons
+	\newpage
+	% -------------------------------------------------------------------------------------
+	% END DOCUMENT
+	% -------------------------------------------------------------------------------------
+\end{document}
