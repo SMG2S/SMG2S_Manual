@@ -11,6 +11,10 @@
 
 \usepackage{listings}
 \usepackage{dirtree} % for directory structure.
+\usepackage{graphicx}
+\graphicspath{ {./img/} }
+
+\usepackage{amsfonts} 
 
 \hypersetup{
 	colorlinks,
@@ -41,9 +45,12 @@
 	% -------------------------------------------------------------------------------------
 	% INTRODUCTION
 	% -------------------------------------------------------------------------------------
+	\pagestyle{myheadings}
+	
 	\chapter{Introduction}
 	
 	\section{Getting Started}
+
 	SMG2S (Scalable Matrix Generator with Given Spectrum) is a software which provides to generator the non-Hermitian Matrices with User-customized eigenvalues. SMG2S is implemented in parallel based on MPI (Message Passing Interface) and C++11 to support efficiently the generation of test matrices on distributed memory platforms.
 
 	Iterative linear algebra methods are important for the applications in various fields. The analysis of the iterative method behaviors is complex, and it is necessary to evaluate their convergence to solve extremely large non-Hermitian eigenvalue and linear problems on parallel and/or distributed machines. This convergence depends on the properties of spectra. Thus, we propse SMG2S to generate large matrices with known spectra to benchmark these methods. The generated matrices are non-Hermitian and non-trivial, with very high dimension. SMG2S can generate the non-Hermitian matrices with user-custormized eigenvalues. 
@@ -60,7 +67,7 @@
 	\end{itemize}
 
 	\section{Installation}
-	To obtain SMG2S, please follow the instructions at the SMG2S download page: https://github.com/brunowu/SMG2S.
+	To obtain SMG2S, please follow the instructions at the SMG2S download page: https://smg2s.github.io/download.html.
 	
 	\textbf{Prerequisites}:
 	
@@ -112,7 +119,13 @@
    Total Test time (real) =   4.29 sec
 \end{lstlisting}
 
-
+	\section{CMake Options}
+	We uses CMake is to build, test and package SMG2S. If you do not have PETSc and SLEPc in your platform, please make sure the option below is \textcolor{red}{OFF}.
+	
+	\begin{lstlisting}[language=bash,frame=single]
+option(INSTALL_TO_USE "Install SMG2S include files?" OFF)
+	\end{lstlisting}
+	
 	\section{Copyright and Licensing of SMG2S}
 	
 	SMG2S is a open source software published under the GNU Lesser General Public License v3.0. SMG2S can be redistributed and modified under the terms of this license.
@@ -198,9 +211,36 @@
 	\subsection{Vector Map}
 	\subsection{Creating a Distributed Vector}
 	
+	\begin{lstlisting}[language=C++,frame=single]
+   int world_size;
+   int world_rank;
+   int span, lower_b, upper_b;
+   MPI_Comm_size(comm, &world_size);
+   MPI_Comm_rank(comm, &world_rank);
+   span = int(ceil(double(probSize)/double(world_size)));
+   
+   if(world_rank == world_size - 1){
+       lower_b = world_rank * span;
+       upper_b = probSize - 1 + 1;
+   }else{
+       lower_b = world_rank * span;
+       upper_b = (world_rank + 1) * span - 1 + 1;
+   }
+   
+   parVector<T,S> *vec = new parVector<double,int>(   \
+   comm,lower_b, upper_b);
+	\end{lstlisting}
+	
 	\subsection{Parallel Matrix}
 	\subsection{Matrix Map}
 	\subsection{Creating a Distributed Matrix}
+	
+	The distributed matrix should be created with the mapping of distributed vector.
+	
+	
+	\begin{lstlisting}[language=C++,frame=single]
+parMatrixSparse<T,S> *A=new parMatrixSparse<T,S>(vec,vec);
+	\end{lstlisting}
 	
 	\newpage
 		% -------------------------------------------------------------------------------------
@@ -209,8 +249,25 @@
 	\chapter{Templated  Nilpotency Matrix Object}
 	\section{Introduction}
 	\section{Creating a Nilpotency Matrix Object}
+	
+	\begin{lstlisting}[language=C++,frame=single]
+   Nilpotency<int> nilp;
+   nilp.NilpType1(length,probSize);
+	\end{lstlisting}
+	
 	\section{Different Types of Nilpotency Matrix}
+	
+	\begin{itemize}
+		\item NilpType1;
+		\item NilpType2;
+		\item NilpType3;
+	\end{itemize}
 	\section{Parameter Validation for Nilpotency Matrix}
+	\begin{itemize}
+	\item NilpType1: parameter \textcolor{blue}{length} can be any integer value $>$ 0;
+	\item NilpType2: parameter \textcolor{blue}{length} sould be even;
+	\item NilpType3: validation of parameter \textcolor{blue}{length} is complex. Firstly, $length$ should be divisible by $p$, secondly, it should exist the integers $e$ and $f\in \mathbb{N^*}$ that makes $(d+1)e$ be divisible by $i+pf$,  for all $i \in 1,2,\cdots, \frac{d}{p}$.
+\end{itemize}
 
 	\newpage
 
@@ -218,8 +275,33 @@
 	% Generate Matrix with SMG2S
 	% -------------------------------------------------------------------------------------
 	\chapter{Generating Matrix with SMG2S}
+	
+	\section{SMG2S Class}
+	The header file \textcolor{blue}{./smg2s/smg2s.h} implement the matrix generation method. It is defined as:
+	
+	\begin{lstlisting}[language=C++,frame=single]
+   template<typename T, typename S>
+   parMatrixSparse<T,S> *smg2s(
+   S probSize,
+   Nilpotency<S> nilp,
+   S lbandwidth,
+   std::string spectrum,
+   MPI_Comm comm
+   )
+	\end{lstlisting}
+	
+	Inside the definition, \textcolor{blue}{typename T} is to define the size of matrix, and  \textcolor{blue}{typename S} is to define the scalar types of entries of matrix. We give the meaning of the input parameter as below:
+	
+	\begin{itemize}
+		\item \textbf{S ProbSize}: the size of matrix to generate;
+		\item \textbf{Nilpotency$<$S$>$ nilp}: the nilpotent matirx object for generation;
+		\item \textbf{S lbandwidth}: the bandwidth of lower-diagonal band of initial matrix;
+		\item \textbf{std::string spectrum}: the file path of spectra file;
+		\item \textbf{MPI\_Comm comm}: the working MPI communicator.
+	\end{itemize}
+	
+	
 	\section{Generation Workflow}
-	\section{Example}
 	Include the head file:
 	
 	\begin{lstlisting}[language=C++,frame=single]
@@ -252,40 +334,73 @@
 	The given spectra file is in \textbf{pseudo-Matrix Market Vector format}. For the complex eigenvalues, the given spectrum is stored in three columns, the first column is the coordinates, the second column is the real part of complex values, and the third column is the imaginary part of complex values.
 
 	\begin{lstlisting}[language=bash,frame=single]
-%%MatrixMarket matrix coordinate complex general
-3 3 3
-1 10 6.5154
-2 10.6288 3.4790
-3 10.7621 5.0540
+   %%MatrixMarket matrix coordinate complex general
+   3 3 3
+   1 10 6.5154
+   2 10.6288 3.4790
+   3 10.7621 5.0540
 	\end{lstlisting}
 
 For the eigenvalues values, the given spectrum is stored in two columns, the first column is the coordinates, the second column is related values.
 	\begin{lstlisting}[language=bash,frame=single]
-%%MatrixMarket matrix coordinate complex general
-3 3
-1 10
-2 10.6288
-3 10.7621
+   %%MatrixMarket matrix coordinate complex general
+   3 3
+   1 10
+   2 10.6288
+   3 10.7621
 \end{lstlisting}
 
+\section{Creation of Given Spectrum}
+In the directory \textcolor{blue}{./verification/tests}, we give an example to generate the file of given spectrum, which can be reused by the users to create their own values. This is a small C++ file named as \textcolor{blue}{vecgen.cpp}.
 
-	\newpage
+If the users want to generate the eigenvalues in time without loading from local file, they can customize their eigenvalues generation by the function \textcolor{blue}{specGen} in the file \textcolor{blue}{./verification/tests/specGen.h}, and set the parameter \textcolor{blue}{spectrum} of \textcolor{blue}{smg2s} to be \textcolor{blue}{" "}.
+
+	\begin{lstlisting}[language=C++,frame=single]
+template<typename T, typename S>
+void parVector<T,S>::specGen(std::string spectrum)
+\end{lstlisting}
+
+In this function, the eigenvalues are stored by the distributed vector textcolor{blue}{parVector}. And the filling of values on this parVector can be done by  the method \textcolor{blue}{SetValueGlobal} implemented in \textcolor{blue}{parVector}, which takes the global indices to set values.
+
+\section{Customize the Low Band of Initial Matrix}
+We know that the low band bandwidth of initial matrix can be set by the parameter  \textcolor{blue}{lbandwidth} of \textcolor{blue}{smg2s}. Additionaly, the distribution of entries of initial matrix can also be customized by the function  \textcolor{blue}{matInit} provided by the file \textcolor{blue}{./verification/tests/specGen.h}. En default, these entries are filled in random. The different mechanism to fill them will influence the sparsity of final generated sparse matrix.
+
+	\begin{lstlisting}[language=C++,frame=single]
+   template<typename T, typename S>
+   void matInit(
+   parMatrixSparse<T,S> *Am, 
+   parMatrixSparse<T,S> *matAop, 
+   S probSize, 
+   S lbandwidth
+   )
+\end{lstlisting}
+
+In this function, distributed matrix $Am$ and $matAop$ should be filled with the same way. And these entries of matrix can be filled by the method \textcolor{blue}{Loc\_SetValue} implemented in \textcolor{blue}{parMatrixSparse}. \textcolor{blue}{Loc\_SetValue} uses the \textcolor{red}{global indices} of matrix to set values.
+
+\newpage
 	
 	% -------------------------------------------------------------------------------------
 	% Interface
 	% -------------------------------------------------------------------------------------
 	\chapter{Interface to Other Languages/Libraries}
+	SMG2S provides interfaces to C, Python, PETSc and Trilinos.
+	
 	\section{Interface to C}
-	SMG2S install command will generate a shared library \textcolor{blue}{libsmg2s.so} (\textcolor{blue}{libsmg2s2c.dylib} on OS X platform) into \$\{INSTALL\_DIRECTORY\}/lib. It can be used to profit the C wrapper of SMG2S.
+	SMG2S install command will generate a shared library \textcolor{blue}{libsmg2s.so} (\textcolor{blue}{libsmg2s2c.dylib} on OS X platform) into \$\{INSTALL\_DIRECTORY\}/lib. It can be used to profit the C wrapper of SMG2S. 
 	
 	The way to use:
+	1. Add this shared library to \textcolor{blue}{LD\_LIBRARY\_PATH}:
 	
-	Include the header file:
+	\begin{lstlisting}[language=bash,frame=single]
+   export LD_LIBRARY_PATH=${INSTALL DIRECTORY}/lib
+	\end{lstlisting}
+
+	2. Include the header file:
 	\begin{lstlisting}[language=C,frame=single]
   #include <interface/C/c_wrapper.h>
 	\end{lstlisting}
 	
-	create Nilpotency object :
+	3. create Nilpotency object :
 	
 	\begin{lstlisting}[language=C,frame=single]
    struct NilpotencyInt *n;
@@ -293,23 +408,61 @@ For the eigenvalues values, the given spectrum is stored in two columns, the fir
    NilpType1(n, 2, 10);
 	\end{lstlisting}
 	
-	After that, you need to create the parallel Sparse Matrix Object Mt like this :
+	4. After that, you need to create the parallel Sparse Matrix Object Mt like this :
 
 	\begin{lstlisting}[language=C,frame=single]
    struct parMatrixSparseDoubleInt *m;
    m = newParMatrixSparseDoubleInt();
 	\end{lstlisting}
 
-	Generate by SMG2S :
+	5. Generate by SMG2S :
 	
 	\begin{lstlisting}[language=C,frame=single]
    smg2s(m, 10, n, 3 ," ",MPI_COMM_WORLD);
     \end{lstlisting}
 
-   Release Nilpotency Object and parMatrixSparse Object :
+   6. Release Nilpotency Object and parMatrixSparse Object :
 	\begin{lstlisting}[language=C,frame=single]
    smg2s(m, 10, n, 3 ," ",MPI_COMM_WORLD);
    \end{lstlisting}
+
+	\begin{lstlisting}[language=C,frame=single,	basicstyle=\footnotesize]
+struct NilpotencyInt;
+struct NilpotencyLongInt;
+//double + complex + int64
+struct parMatrixSparseComplexDoubleLongInt;   
+/*parVectorMap C wrapper*/
+struct parVectorMapInt *newparVectorMapInt(void);
+   
+/*complex double long int*/
+   
+struct parMatrixSparseComplexDoubleLongInt *newPar\
+MatrixSparseComplexDoubleLongInt(void);
+
+void ReleaseParMatrixSparseComplexDoubleLongInt(struct \
+parMatrixSparseComplexDoubleLongInt **ppInstance);
+
+void LOC_MatViewComplexDoubleLongInt(struct parMatrix\
+SparseComplexDoubleLongInt *m);
+
+void GetLocalSizeComplexDoubleLongInt(struct parMatrix\
+SparseComplexDoubleLongInt *m, __int64_t *rs, __int64_t *cs);
+
+void Loc_ConvertToCSRComplexDoubleLongInt(struct parMatrix\
+SparseComplexDoubleLongInt *m);
+   
+void Loc_CSRGetRowsArraySizesComplexDoubleLongInt(struct parMatri\
+xSparseComplexDoubleLongInt *m, __int64_t *size,__int64_t *size2);
+
+void Loc_CSRGetRowsArraysComplexDoubleLongInt(struct par\
+MatrixSparseComplexDoubleLongInt *m, __int64_t size, int **rows,\
+__int64_t size2, int **cols, double **real, double **imag);
+
+void smg2sComplexDoubleLongInt(struct parMatrixSparseComplex\
+DoubleLongInt *m, __int64_t probSize, struct NilpotencyLongInt \
+*nilp, __int64_t lbandwidth, char *spectrum, MPI_Comm comm);
+   
+	\end{lstlisting}
 
 	\section{Interface to Python}
 	
@@ -393,7 +546,10 @@ For the eigenvalues values, the given spectrum is stored in two columns, the fir
    A = ConvertToPETSCMat(Mt); 
    \end{lstlisting}
 
+    Here are the example of \href{https://github.com/SMG2S/SMG2S/tree/master/example/arnoldi}{\textcolor{blue}{Arnoldi}}, \href{https://github.com/SMG2S/SMG2S/tree/master/example/gmres}{\textcolor{blue}{GMRES}}, and another  \href{https://github.com/SMG2S/SMG2S/tree/master/example/krylov}{\textcolor{blue}{Krylov method}}.
+    
 	\section{Interface to Trilinos/Teptra}
+	
 	SMG2S is able to convert its distributed to the CSR one-dimensional distributed matrix defined by Teptra in Trilinos.
 	
 	The way of usage:
@@ -427,12 +583,27 @@ For the eigenvalues values, the given spectrum is stored in two columns, the fir
 	% Verification
 	% -------------------------------------------------------------------------------------
 	\chapter{Verification of Eigenvalues}
+	
+	SMG2S provides the functionality to verify the abilibity to keep given spectrum. In the directory of \textbf{./verification/}. The implementation of the functionality is \textcolor{blue}{powerInverse.cpp}.
+	
 	\section{Prerequisites}
+	
+	The verfication method is implemented based on the shifted inverse method proposed by PETSc/SLEPc. Before the starting of verification, it is necessary to have the two on the platforms.
+	
+	If not, the download and installation of PETSc can be found: \href{https://www.mcs.anl.gov/petsc/download/index.html}{\textcolor{blue}{[PETSc Download]}} and \href{https://www.mcs.anl.gov/petsc/documentation/installation.html}{\textcolor{blue}{[SLPEc Installation]}}. The download and installation of PETSc can be found: \href{http://slepc.upv.es/download/}{\textcolor{blue}{[SLEPc Download]}} and \href{http://slepc.upv.es/documentation/instal.htm}{\textcolor{blue}{[SLEPc Installation]}}.
+	
 	\section{Verifcation by Shifted Inverse Power Method}
 	
-	run the verification script:
-
+	1. compile the file \textcolor{blue}{powerInverse.cpp} by the command
+	
 	\begin{lstlisting}[language=bash,frame=single]
+   make
+	\end{lstlisting}
+	
+	This will generate an executable  \textcolor{blue}{powerInverse.exe}.
+	
+	2. Suppose the given eigenvalues are stored in the file \textcolor{blue}{vector.txt} by the pseudo-Matrix Matrix Vector format, run the verification script as blow:
+		\begin{lstlisting}[language=bash,frame=single]
 #!/bin/bash
 EXEC=./powerInverse.exe
 N=100
@@ -455,9 +626,19 @@ done
 
    \end{lstlisting}
 
+	Here we list the meaning of the important parameters in the script above:
+	
+	\begin{itemize}
+		\item N: the size of matrix to generate, which should be equal to the number of given eigenvalues;
+		\item L: the bandwidth of low part diagonal of matrix to generate;
+		\item TEST\_TOL: the tolerance to check if the accuracy of one eigenvalue can be accepted or not;
+		\item DEGREE: the continuous one for the nilpotency matrix.
+	\end{itemize}
 	\section{Script for result cleaning}
+	
+	The result file generated during the verification can be cleaned into the pseudo-Matrix Market Vector by the script below:
+	
 	\begin{lstlisting}[language=bash,frame=single]
-
 #!/bin/bash
 
 grep "@> The eigenvalue" $1 > tmp.txt
@@ -476,8 +657,87 @@ awk 'BEGIN{print "%%MatrixMarket matrix coordinate \
 rm tmp.txt tmp2.txt tmp3.txt tmp4.txt tmp5.txt
    \end{lstlisting}
 		
+	Execution of this script:
+	
+	\begin{lstlisting}[language=bash,frame=single]
+   ./traitement.sh results.txt results_clean.txt
+	\end{lstlisting}
+	
+	In this command, The 1st and 2nd arugments for the execution are seperately the initial results file and the final cleaned and formatted file.
+	
 	\section{Plot by Graphic User Interface}
-	Silly daemons
+
+	\subsection{Prerequisites for GUI}
+	
+	You need to have Python2.X or Python3.X to run it. Moreover, UI uses some libraries to support a dynamic and intuitive graphical user interface, you can see the list of libraries. Normally, some of them are include in Python distribution. You can find below the list of necessary libraries of the UI.
+	
+	\begin{itemize}
+		\item Modules which are bundled in the Python installation : Tkinter, re, sys, decimal ;
+		\item Modules which need to be installed in addition to Python : NumPy \& SciPy, Matplotlib, Pillow(PIL)
+	\end{itemize}
+
+	Install modules to Python 2.X:
+	\begin{lstlisting}[language=bash,frame=single]
+   apt-get install python-tk python-imaging-tk
+   pip -m install Pillow
+   python -mpip install -U pip
+   python -mpip install -U matplotlib
+   pip install -U numpy scipy
+	\end{lstlisting}
+
+	Install modules to Python 3.X:
+	\begin{lstlisting}[language=bash,frame=single]
+   sudo apt-get install python3-tk python-imaging-tk
+   pip -m install Pillow
+   python -mpip install -U pip
+   python -mpip install -U matplotlib
+   pip install -U numpy scipy
+	\end{lstlisting}
+
+	\subsection{How to use the GUI}
+	
+	To use the GUI:
+	\begin{lstlisting}[language=bash,frame=single]
+   python main.py
+    \end{lstlisting}
+
+When you launch the program, a new windows opens like Fig. \ref{fig:Home Screen Capture} :
+
+	\begin{figure}[htbp]
+		\label{fig:Home Screen Capture}
+		\caption{Home Screen Capture}
+		\centering
+		\includegraphics[width=10cm]{home.png}
+	\end{figure}
+
+The first step is to select the files which be display. When you have selected a file, the button change in green color as Fig. \ref{fig:Home Screen Capture After selection} (\textcolor{red}{Attention, the files imported should be in the pseudo-Matrix Market vector format} that we have talked):
+
+\begin{figure}[htbp]
+			\label{fig:Home Screen Capture After selection}
+	\caption{Home Screen Capture After Selection}
+		\centering
+	\includegraphics[width=10cm]{home_ready.png}
+\end{figure}
+
+After that, you can click on "Display" to build and open the graphic on the right side of the window. Click on "New window" to open your graphic on a new window. It's possible to open as many windows as you want like Fig. \ref{fig:Home Screen Plot Capture}:
+
+\begin{figure}[htbp]
+				\label{fig:Home Screen Plot Capture}
+	\caption{Home Screen Plot Capture}
+		\centering
+	\includegraphics[width=10cm]{home_screen.png}
+\end{figure}
+
+Your will be generate with automatic lens scaling, but your can generate it with your own scales as Fig. \ref{fig:Home Screen Plot Capture with lens scaling}:
+
+\begin{figure}[htbp]
+	\label{fig:Home Screen Plot Capture with lens scaling}
+	\caption{Home Screen Plot Capture with Lens Scaling}
+		\centering
+	\includegraphics[width=10cm]{home_screen_custom.png}
+\end{figure}
+
+
 	\newpage
 	% -------------------------------------------------------------------------------------
 	% END DOCUMENT
