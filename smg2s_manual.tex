@@ -2,7 +2,15 @@
 
 \usepackage{color}
 \usepackage{hyperref}
+\hypersetup{
+	colorlinks=true,
+	linkcolor=blue,
+	filecolor=magenta,      
+	urlcolor=cyan,
+}
+
 \usepackage{listings}
+\usepackage{dirtree} % for directory structure.
 
 \hypersetup{
 	colorlinks,
@@ -120,14 +128,66 @@
 	You should have received a copy of the GNU Lesser General Public License
 	along with SMG2S.  If not, see <http://www.gnu.org/licenses/>.
 	
+	\section{Programming Language in SMG2S}
+	SMG2S is a collection of templated header files written in C++. The wrappers to C and Python codes are provided. The users of PETSc or Trilinos can  directly use SMG2S with the interfaces implemented inside.
+	
 	\section{Referencing SMG2S}
 	
 	@article\{galichergenerate, title=\{Generate Very Large Sparse Matrices Starting from a Given Spectrum\},  author=\{Galicher, Herv{\'e} and Boillod-Cerneux, France and Petiton, Serge and Calvin, Christophe\}
 	\}
 	\section{Directory Structure}
-	\section{List of SMG2S Developers}
 	
-	Hmmm.
+	SMG2S is a collection of header files, and its directory structure is given as follows:
+	
+	\dirtree{%
+		.1 SMG2S.
+		.2 parVector. 
+		.3 parVectorMap.h $\diamondsuit$implementation of distributed vector map.
+		.3 parVector.h $\diamondsuit$implementation of distributed vector.
+		.2 parMatrix.
+		.3 MatrixCSR.h $\diamondsuit$implementation of serial CSR Matrix.
+		.3 parMatrixSparse.h $\diamondsuit$distributed sparse matrix.
+		.2 smg2s.
+		.3 specGen.h $\diamondsuit$Function to provide given spectrum.
+		.3 smg2s.h $\diamondsuit$ implementation of smg2s generator.
+		.2 utlis.
+		.3 MPI\_DataType.h. 
+		.3 utlis.h.
+		.3 logo.h.
+		.2 verification.
+		.3 powerIverse.cpp $\diamondsuit$verfication impl based on SLEPc.
+		.3 UI  $\diamondsuit$GUI for comparison based on SLEPc.
+		.3 tests.
+		.2 interface.
+		.3 C  $\diamondsuit$interface to C.
+		.3 PETSc $\diamondsuit$interface to PETSc.
+		.3 Python $\diamondsuit$interface to Python.
+		.3 Trilinos $\diamondsuit$interface to Trilinos.
+		.2 example.
+		.3 arnoldi.
+		.3 gmres.
+		.3 krylov.
+		.3 teptra.
+		.2 config.
+		.3 config.h.
+	}
+
+	\section{List of SMG2S Contributors}
+	
+	This is the list of SMG2S contributors:
+	
+	\begin{center}
+		\begin{tabular}{ |c|c|c| } 
+			\hline
+			Xinzhe Wu & main constributor & xinzhe.wu@cea.fr \\ 
+			\hline
+			Serge Petiton & Supervisor & serge.petiton@univ-lille1.fr \\ 
+			\hline
+			Quentin Petit & GUI Implementation (Intern) & 
+			quentin.petit@polyetch-lille.net \\ 
+			\hline
+		\end{tabular}
+	\end{center}
 	\newpage
 	
 	% -------------------------------------------------------------------------------------
@@ -160,7 +220,55 @@
 	\chapter{Generating Matrix with SMG2S}
 	\section{Generation Workflow}
 	\section{Example}
-	Silly daemons
+	Include the head file:
+	
+	\begin{lstlisting}[language=C++,frame=single]
+   #include <smg2s/smg2s.h>
+	\end{lstlisting}
+	
+	Generate the Nilpotent Matrix Object:
+
+	\begin{lstlisting}[language=C++,frame=single]
+   Nilpotency<int> nilp;
+   nilp.NilpType1(length,probSize);
+	\end{lstlisting}
+
+	Create the parallel Sparse Matrix Object Mt:
+
+	\begin{lstlisting}[language=C++,frame=single]
+   parMatrixSparse<std::complex<double>,int> *Mt;
+	\end{lstlisting}
+	
+	Generate a new matrix by SMG2S:
+
+	\begin{lstlisting}[language=C++,frame=single]
+   MPI_Comm comm; //working MPI Communicator
+   Mt = smg2s<std::complex<double>,int>(probSize, nilp, 
+   lbandwidth, spectrum, comm);
+	\end{lstlisting}
+	
+	Here, the \textbf{probsize} parameter represent the matrix size, \textbf{nilp} is the nilpotency matrix object that we have declared previously, \textbf{lbandwidth} is the bandwidth of lower-diagonal band. \textbf{spectrum} is the file path of spectra file, if \textbf{spectrum} is set as \textbf{" "}, SMG2S will use the mechanism inside to generate the spectral distribution. \textbf{comm} is the basic object used by MPI to determine which processes are involved in a communication.
+	
+	The given spectra file is in \textbf{pseudo-Matrix Market Vector format}. For the complex eigenvalues, the given spectrum is stored in three columns, the first column is the coordinates, the second column is the real part of complex values, and the third column is the imaginary part of complex values.
+
+	\begin{lstlisting}[language=bash,frame=single]
+%%MatrixMarket matrix coordinate complex general
+3 3 3
+1 10 6.5154
+2 10.6288 3.4790
+3 10.7621 5.0540
+	\end{lstlisting}
+
+For the eigenvalues values, the given spectrum is stored in two columns, the first column is the coordinates, the second column is related values.
+	\begin{lstlisting}[language=bash,frame=single]
+%%MatrixMarket matrix coordinate complex general
+3 3
+1 10
+2 10.6288
+3 10.7621
+\end{lstlisting}
+
+
 	\newpage
 	
 	% -------------------------------------------------------------------------------------
@@ -168,10 +276,151 @@
 	% -------------------------------------------------------------------------------------
 	\chapter{Interface to Other Languages/Libraries}
 	\section{Interface to C}
+	SMG2S install command will generate a shared library \textcolor{blue}{libsmg2s.so} (\textcolor{blue}{libsmg2s2c.dylib} on OS X platform) into \$\{INSTALL\_DIRECTORY\}/lib. It can be used to profit the C wrapper of SMG2S.
+	
+	The way to use:
+	
+	Include the header file:
+	\begin{lstlisting}[language=C,frame=single]
+  #include <interface/C/c_wrapper.h>
+	\end{lstlisting}
+	
+	create Nilpotency object :
+	
+	\begin{lstlisting}[language=C,frame=single]
+   struct NilpotencyInt *n;
+   n = newNilpotencyInt();
+   NilpType1(n, 2, 10);
+	\end{lstlisting}
+	
+	After that, you need to create the parallel Sparse Matrix Object Mt like this :
+
+	\begin{lstlisting}[language=C,frame=single]
+   struct parMatrixSparseDoubleInt *m;
+   m = newParMatrixSparseDoubleInt();
+	\end{lstlisting}
+
+	Generate by SMG2S :
+	
+	\begin{lstlisting}[language=C,frame=single]
+   smg2s(m, 10, n, 3 ," ",MPI_COMM_WORLD);
+    \end{lstlisting}
+
+   Release Nilpotency Object and parMatrixSparse Object :
+	\begin{lstlisting}[language=C,frame=single]
+   smg2s(m, 10, n, 3 ," ",MPI_COMM_WORLD);
+   \end{lstlisting}
+
 	\section{Interface to Python}
+	
+	SMG2S uses SWIG to generate the wrapper of SMG2S to Python. Generate the shared library and install the python module of smg2s.
+	\begin{lstlisting}[language=bash,frame=single]
+   cd ./interface/python;
+   mpicxx -fpic -c smg2s_wrap.cxx  -I/apps/python/3/   \
+   include/python3.5m -std=c++0x
+   mpicxx -shared smg2s_wrap.o -o _smg2s.so
+   python setup.py install
+	\end{lstlisting}
+	
+	Before the utilisation, make sure that \textbf{mpi4py} is installed.
+	
+   This is	a little example of usge :
+	\begin{lstlisting}[language=Python,frame=single]
+   from mpi4py import MPI
+   import smg2s
+   import sys
+
+   size = MPI.COMM_WORLD.Get_size()
+   rank = MPI.COMM_WORLD.Get_rank()
+   name = MPI.Get_processor_name()
+
+   sys.stdout.write(
+   "Hello, World! I am process %d of %d on %s.\n"
+   % (rank, size, name))
+
+   if rank == 0:
+       print ('INFO ]> Starting ...')
+       print("INFO ]> The MPI World Size is %d" %size)
+
+   #bandwidth for the lower band of initial matrix
+   lbandwidth = 3
+
+   #create the nilpotent matrix
+   nilp = smg2s.NilpotencyInt()
+
+   #setup the nilpotent matrix:
+   nilp.NilpType1(2,10)
+
+   Mt = smg2s.parMatrixSparseDoubleInt()
+
+   #Generate Mt by SMG2S
+   #vector.txt is the file that stores the given   \
+   spectral distribution in local filesystem.
+   Mt=smg2s.smg2sDoubleInt(10,nilp,lbandwidth,    \
+   "vector.txt", MPI.COMM_WORLD)
+	\end{lstlisting}
 	\section{Interface to PETSc}
+	
+	SMG2S provides the interface to scientific computational softwares PETSc/SLEPc.
+	
+	The way of Usage:
+	
+	Include header file:
+	Include the header file:
+   \begin{lstlisting}[language=C,frame=single]
+   #include <interface/PETSc/petsc_interface.h>
+   \end{lstlisting}
+	
+	Create parMatrixSparse type matrix :
+   \begin{lstlisting}[language=C,frame=single]
+  parMatrixSparse<std::complex<double>,int> *Mt;
+   \end{lstlisting}
+
+	Restore this matrix into CSR format :
+   \begin{lstlisting}[language=C,frame=single]
+   Mt->Loc_ConvertToCSR();
+	\end{lstlisting}
+
+	Create PETSc MAT type :
+   \begin{lstlisting}[language=C,frame=single]
+   MatCreate(PETSC_COMM_WORLD,&A); 
+	\end{lstlisting}
+
+   Convert to PETSc MAT format :
+
+	Create PETSc MAT type :
+   \begin{lstlisting}[language=C,frame=single]
+   A = ConvertToPETSCMat(Mt); 
+   \end{lstlisting}
+
 	\section{Interface to Trilinos/Teptra}
-	Silly daemons
+	SMG2S is able to convert its distributed to the CSR one-dimensional distributed matrix defined by Teptra in Trilinos.
+	
+	The way of usage:
+	
+	 Include header file
+
+	\begin{lstlisting}[language=C++,frame=single]
+   #include <interface/Trilinos/trilinos_interface.hpp>
+	\end{lstlisting}
+	
+	Create parMatrixSparse type matrix :
+	\begin{lstlisting}[language=C++,frame=single]
+   parMatrixSparse<std::complex<double>,int> *Mt;
+   \end{lstlisting}
+	
+	Create Trilinos/Teptra MAT type :
+	\begin{lstlisting}[language=C++,frame=single]
+   parMatrixSparse<std::complex<double>,int> *Mt;
+	\end{lstlisting}
+
+	Convert to Trilinos MAT format :
+	\begin{lstlisting}[language=C++,frame=single]
+   K = ConvertToTrilinosMat(Mt); 
+	\end{lstlisting}
+
+	\href{https://github.com/SMG2S/SMG2S/tree/master/example/teptra}{Here is a full \textcolor{blue}{ example of Trilinos}.}
+	
 	\newpage
 
 	% -------------------------------------------------------------------------------------
@@ -180,7 +429,53 @@
 	\chapter{Verification of Eigenvalues}
 	\section{Prerequisites}
 	\section{Verifcation by Shifted Inverse Power Method}
+	
+	run the verification script:
+
+	\begin{lstlisting}[language=bash,frame=single]
+#!/bin/bash
+EXEC=./powerInverse.exe
+N=100
+L=10
+TEST_TOL=0.00001
+DEGREE=4
+
+LENGTH=$(awk 'NR==2{print $1}' vector.txt)
+echo "Test Eigenvalues number = "${LENGTH}
+
+for((i=3;i<=${LENGTH}+2;i++))
+do
+real=$(awk 'NR=='$i'{print $2}' vector.txt)
+imag=$(awk 'NR=='$i'{print $3}' vector.txt)
+srun -n 1 ${EXEC} -n ${N} -l ${L} -eps_monitor_conv   \
+-eps_power_shift_type constant -st_type sinvert     \
+-exact_value ${real}+${imag}i -test_tol ${TEST_TOL}   \
+-degree ${DEGREE}
+done
+
+   \end{lstlisting}
+
 	\section{Script for result cleaning}
+	\begin{lstlisting}[language=bash,frame=single]
+
+#!/bin/bash
+
+grep "@> The eigenvalue" $1 > tmp.txt
+awk '{print $5 " " $7 }' tmp.txt > tmp2.txt
+awk '{print substr($0, 1, length($0)-1)}' tmp2.txt \
+> tmp3.txt
+
+awk '{print NR  " " $0}' tmp3.txt > tmp4.txt
+NB=`wc -l tmp4.txt | awk '{print $1}'`
+awk 'BEGIN{print '$NB' " " '$NB' " " '$NB'}{print}' \
+tmp4.txt  > tmp5.txt
+
+awk 'BEGIN{print "%%MatrixMarket matrix coordinate \
+ real general"}{print}' tmp5.txt   > $2
+
+rm tmp.txt tmp2.txt tmp3.txt tmp4.txt tmp5.txt
+   \end{lstlisting}
+		
 	\section{Plot by Graphic User Interface}
 	Silly daemons
 	\newpage
