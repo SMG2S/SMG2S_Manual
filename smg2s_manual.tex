@@ -1,4 +1,4 @@
-\documentclass[letterpaper, 10 pt]{report}
+\documentclass[a4paper, 10 pt]{report}
 
 \usepackage{color}
 \usepackage{hyperref}
@@ -25,18 +25,36 @@
 	urlcolor=black
 }
 
+\title{{\Huge SMG2S Manual}\\
+	%Application Program Interface\\
+	\vspace{1cm}
+	\large {For SMG2S Release 1.0.0} \\
+	\vspace{2cm}
+	\Large	Version 1.0\\}
+%DRAFT 0.7}
+\author{
+	\Large Xinzhe Wu\\
+}
+
 % -------------------------------------------------------------------------------------
 % BEGIN DOCUMENT
 % -------------------------------------------------------------------------------------
 \begin{document}
-	\title{SMG2S User Manual}
-	\author{Xinzhe Wu}
+
 	\maketitle
 	\pagestyle{empty}
-	
+	Copyright \copyright 2018 smg2s.github.io ALL RIGHTS RESERVED.
+	Report may not be copied for commercial redistribution, republication, or dissemination without the explicit permission
 	% -------------------------------------------------------------------------------------
 	% TABLE OF CONTENTS
 	% -------------------------------------------------------------------------------------
+	
+	\begin{abstract}
+	Iterative linear algebra methods are the important parts of the overall computing time of applications in various fields since decades. Recent research related to social networking, big data, machine learning and artificial intelligence has increased the necessity for non-hermitian solvers associated with much larger sparse matrices and graphs. The analysis of the iterative method behaviors for such problems is complex, and it is necessary to evaluate their convergence to solve extremely large non-Hermitian eigenvalue and linear problems on parallel and/or distributed machines. This convergence depends on the properties of spectra. Then, it is necessary to generate large matrices with known spectra to benchmark the methods. These matrices should be non-Hermitian and non-trivial, with very high dimension. A scalable parallel matrix generator SMG2S that uses the user-defined spectrum to construct large-scale sparse matrices and ensures their eigenvalues as the given ones with high accuracy is implemented based on MPI and C++11. This report gives the manual of SMG2S.
+	\end{abstract}
+	\newpage
+	\thispagestyle{empty}
+	\mbox{}
 	\tableofcontents
 	\newpage
 	\thispagestyle{empty}
@@ -707,7 +725,7 @@ When you launch the program, a new windows opens like Fig. \ref{fig:Home Screen 
 		\label{fig:Home Screen Capture}
 		\caption{Home Screen Capture}
 		\centering
-		\includegraphics[width=10cm]{home.png}
+		\includegraphics[width=12cm]{home.png}
 	\end{figure}
 
 The first step is to select the files which be display. When you have selected a file, the button change in green color as Fig. \ref{fig:Home Screen Capture After selection} (\textcolor{red}{Attention, the files imported should be in the pseudo-Matrix Market vector format} that we have talked):
@@ -716,7 +734,7 @@ The first step is to select the files which be display. When you have selected a
 			\label{fig:Home Screen Capture After selection}
 	\caption{Home Screen Capture After Selection}
 		\centering
-	\includegraphics[width=10cm]{home_ready.png}
+	\includegraphics[width=13cm]{home_ready.png}
 \end{figure}
 
 After that, you can click on "Display" to build and open the graphic on the right side of the window. Click on "New window" to open your graphic on a new window. It's possible to open as many windows as you want like Fig. \ref{fig:Home Screen Plot Capture}:
@@ -725,7 +743,7 @@ After that, you can click on "Display" to build and open the graphic on the righ
 				\label{fig:Home Screen Plot Capture}
 	\caption{Home Screen Plot Capture}
 		\centering
-	\includegraphics[width=10cm]{home_screen.png}
+	\includegraphics[width=12cm]{home_screen.png}
 \end{figure}
 
 Your will be generate with automatic lens scaling, but your can generate it with your own scales as Fig. \ref{fig:Home Screen Plot Capture with lens scaling}:
@@ -734,7 +752,7 @@ Your will be generate with automatic lens scaling, but your can generate it with
 	\label{fig:Home Screen Plot Capture with lens scaling}
 	\caption{Home Screen Plot Capture with Lens Scaling}
 		\centering
-	\includegraphics[width=10cm]{home_screen_custom.png}
+	\includegraphics[width=12cm]{home_screen_custom.png}
 \end{figure}
 
 
