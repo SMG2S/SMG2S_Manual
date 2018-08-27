@@ -15,6 +15,8 @@
 \graphicspath{ {./img/} }
 
 \usepackage{amsfonts} 
+\usepackage{multicol}
+\setlength{\columnsep}{0.8in}
 
 \hypersetup{
 	colorlinks,
@@ -444,40 +446,66 @@ In this function, distributed matrix $Am$ and $matAop$ should be filled with the
    smg2s(m, 10, n, 3 ," ",MPI_COMM_WORLD);
    \end{lstlisting}
 
-	\begin{lstlisting}[language=C,frame=single,	basicstyle=\footnotesize]
+	SMG2S provides the C interface to different data types. For the data type of matrix size, it can be either $int$ or $long int$; for the data type of matrix entries, it can be either $complex$ or $real$ with $single$ or double precision.
+	
+	The  Nilpotency Matrix object is implemented for both $int$ and $long int$ as below:
+		\begin{lstlisting}[language=C,frame=single,	basicstyle=\footnotesize]
 struct NilpotencyInt;
 struct NilpotencyLongInt;
+		\end{lstlisting}
+	
+	The interface of C for parMatrixSparse Object and smg2s function can be defined as below, $\_\_\_\_\_\_$ can be replaced by the selected data type, as one of :
+	
+	\begin{multicols}{2}
+	\begin{itemize}
+		\item $ComplexDoubleLongInt$;
+		\item $ComplexDoubleInt$;
+		\item $ComplexSingleLongInt$;
+		\item $ComplexSingleInt$;
+		\item $RealDoubleLongInt$;
+		\item $RealDoubleInt$;
+		\item $RealSingleLongInt$;
+		\item $RealSignleInt$.
+	\end{itemize}
+	\end{multicols}
+
+	\begin{lstlisting}[language=C,frame=single,	basicstyle=\footnotesize]
 //double + complex + int64
-struct parMatrixSparseComplexDoubleLongInt;   
+struct parMatrixSparse______;   
 /*parVectorMap C wrapper*/
+
 struct parVectorMapInt *newparVectorMapInt(void);
-   
+
+or 
+
+struct parVectorMapLongInt *newparVectorMapLongInt(void);
+
 /*complex double long int*/
    
-struct parMatrixSparseComplexDoubleLongInt *newPar\
-MatrixSparseComplexDoubleLongInt(void);
+struct parMatrixSparseComplex______ *newPar\
+MatrixSparse______(void);
 
-void ReleaseParMatrixSparseComplexDoubleLongInt(struct \
-parMatrixSparseComplexDoubleLongInt **ppInstance);
+void ReleaseParMatrixSparse______(struct \
+parMatrixSparse______ **ppInstance);
 
-void LOC_MatViewComplexDoubleLongInt(struct parMatrix\
-SparseComplexDoubleLongInt *m);
+void LOC_MatView______(struct parMatrix\
+Sparse______ *m);
 
-void GetLocalSizeComplexDoubleLongInt(struct parMatrix\
-SparseComplexDoubleLongInt *m, __int64_t *rs, __int64_t *cs);
+void GetLocalSize______(struct parMatrix\
+Sparse______ *m, __int64_t *rs, __int64_t *cs);
 
-void Loc_ConvertToCSRComplexDoubleLongInt(struct parMatrix\
+void Loc_ConvertToCSR______(struct parMatrix\
 SparseComplexDoubleLongInt *m);
    
-void Loc_CSRGetRowsArraySizesComplexDoubleLongInt(struct parMatri\
-xSparseComplexDoubleLongInt *m, __int64_t *size,__int64_t *size2);
+void Loc_CSRGetRowsArraySizes______(struct parMatri\
+xSparse______ *m, __int64_t *size,__int64_t *size2);
 
-void Loc_CSRGetRowsArraysComplexDoubleLongInt(struct par\
-MatrixSparseComplexDoubleLongInt *m, __int64_t size, int **rows,\
+void Loc_CSRGetRowsArrays______(struct par\
+MatrixSparse______ *m, __int64_t size, int **rows,\
 __int64_t size2, int **cols, double **real, double **imag);
 
-void smg2sComplexDoubleLongInt(struct parMatrixSparseComplex\
-DoubleLongInt *m, __int64_t probSize, struct NilpotencyLongInt \
+void smg2s______(struct parMatrixSparse______ \
+ *m, __int64_t probSize, struct NilpotencyLongInt \
 *nilp, __int64_t lbandwidth, char *spectrum, MPI_Comm comm);
    
 	\end{lstlisting}
