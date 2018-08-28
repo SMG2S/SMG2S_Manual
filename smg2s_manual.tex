@@ -229,8 +229,110 @@ option(INSTALL_TO_USE "Install SMG2S include files?" OFF)
 	\chapter{Templated  SMG2S Parallel Matrix and Vector}
 	\section{Parallel Vector}
 	\subsection{Vector Map}
+	
+	The distribution of a set of integer labels (or elements) across the processes is here called a
+	$parVectorMap$. In SMG2S, it is implemented with the help of $std::map$, which maps the proc number and related intergers. Bascically, 	$parVectorMap$ handles the definition of global and local indices for the mapping across the processes. Here we give some methods of $parVectorMap<S>$:
+	
+		\begin{lstlisting}[language=C++,frame=single]
+   S Loc2Glob(S local_index);
+   //convert local index to global index;
+	
+   S Glob2Loc(S global_index);
+   //convert local index to global index;
+
+   int GetRank();
+   //Get proc index;
+   
+   S GetLowerBound();
+   //Get lower bound index for each proc;
+  
+   S GetUpperBound();
+   //Get upper bound index for each proc;
+   
+   S GetLocalSize();
+   //Get index number for each proc;
+   
+   S GetGlobalSize();
+   //Get total interger number for all procs.
+   
+	\end{lstlisting}
+	
 	\subsection{Creating a Distributed Vector}
 	
+	A distributed vector $parVector$ accross the processes can be created with the help of $parVectorMap$. The entries of $parVector$ is distributed over different processes refering to the $parVectorMap$. $parVector<T,S>$ is implemented with C++ template supported, with T the data type of entry, and S the data type of index.  
+
+This is the constructor of $parVector$, with $MPI\_Comm$ $ncomm$ the working MPI communicator, $S$$ lbound$ and $S$$ ubound$ respectively the lower and upper bound of vector global indices on each proc.
+\begin{lstlisting}[language=C++,frame=single]
+   /*constructor*/
+   parVector(MPI_Comm ncomm, S lbound, S ubound);
+\end{lstlisting}
+
+Here we give some methods of $parVector$:
+
+   	\begin{lstlisting}[language=C++,frame=single]
+   parVectorMap<S> *GetVecMap();
+   //return the related parVectorMap of parVector;
+
+   S Loc2Glob(S local_index);
+  //convert local index to global index;
+
+   S Glob2Loc(S global_index);
+   //convert local index to global index;
+   
+   int GetRank();
+   //Get proc index;
+   
+   S GetLowerBound();
+   //Get lower bound index for each proc;
+   
+   S GetUpperBound();
+   //Get upper bound index for each proc;
+   
+   S GetLocalSize();
+   //Get index number for each proc;
+   
+   S GetGlobalSize();
+   //Get total interger number for all procs;
+   
+   T *GetArray();
+   //Get the array containg the entries on each proc;
+  
+   void SetValueLocal(S row, T value);
+  //insert value in the local index named row;
+  
+   void SetValuesLocal(S nindex, S *rows, T *values);
+   //insert array in the local indices named rows;
+ 
+   void SetValueGocal(S row, T value);
+   //insert value in the gocal index named row;
+
+   void SetValuesGocal(S nindex, S *rows, T *values);
+   //insert array in the gocal indices named rows;
+ 
+   void SetTovalue(T value);
+  //Set the entries of parVector all to same given value;
+  
+  void VecAdd(parVector *v);
+  //Add another vector v with same mapping;
+  
+  void VecScale(T scale);
+  //Scaling the vector;
+  
+  T VecDot(parVector *v);
+  //vector dot product operation;
+  
+  void ReadExtVec(std::string spectrum);
+  //read vector from local file;
+  
+  void VecView();
+  //display the vector;
+  
+  void specGen(std::string spectrum);
+//Generate/loal a special vector containing given spectrum
+  
+   \end{lstlisting}
+	
+	Here we give an example to generate a $parVector$
 	\begin{lstlisting}[language=C++,frame=single]
    int world_size;
    int world_rank;
@@ -247,18 +349,88 @@ option(INSTALL_TO_USE "Install SMG2S include files?" OFF)
        upper_b = (world_rank + 1) * span - 1 + 1;
    }
    
-   parVector<T,S> *vec = new parVector<double,int>(   \
+   parVector<T,S> *vec = new parVector<T,S>(   \
    comm,lower_b, upper_b);
+   
+   vec->SetTovalue(T val);
+   
 	\end{lstlisting}
 	
 	\subsection{Parallel Matrix}
-	\subsection{Matrix Map}
-	\subsection{Creating a Distributed Matrix}
 	
-	The distributed matrix should be created with the mapping of distributed vector.
+	The one-dimensional row-major parallel matrix $parMatrixSparse$ in SMG2S is distributed with the same $parVectorMap$ of a given $parVector$. On each proces, the columns indices and the entries values are stored by a $std::map<T, S>$ with S data type of indices and T data type of entries.
 	
+	This is the constructor of $parMatrixSparse$:
+	
+\begin{lstlisting}[language=C++,frame=single]
+/*constructor*/
+parMatrixSparse(parVector<T,S> *Vec, parVector<T,S> *Vec);
+\end{lstlisting}
+	
+	Here we given some methods of the $parMatrixSparse$ object:
 	
 	\begin{lstlisting}[language=C++,frame=single]
+parVectorMap<S> *GetYMap();
+//return the matrix mapping of the columns;
+	
+MPI_Comm GetComm();
+//Get current working MPI communicator;
+	
+std::map<S,T> *GetDynMatLoc();
+//Get the map storing cols and entries on each proc;
+	
+void LOC_MatView();
+//display the parallel matrix
+	
+void Loc_SetValueLocal( S row, S col, T value);
+//insert value in the local index row;
+	
+void Loc_SetValuesLocal( S nindex, S *rows, S *cols, \
+ T *values);
+//insert array  in the local index rows;
+	
+void SetValueGocal(S row, T value);
+//insert value in the gocal index named row;
+	
+void SetValuesGocal(S nindex, S *rows, T *values);
+//insert array in the gocal indices named rows;
+	
+void Loc_SetValue(S row, S col, T value);
+//Set the entriy (row, col) of parMatrix with value;
+	
+void Loc_SetDiagonal(parVector<T,S> *diag);
+//set the diagonal of matrix to a given vector;
+	
+void Loc_MatScale(T scale);
+//Scaling the matrix;
+	
+void Loc_MatAXPY(parMatrixSparse<T,S> *X, T scale);
+//AXPY operation;
+	
+void Loc_MatAYPX(parMatrixSparse<T,S> *X, T scale);
+//AYPX operation;
+	
+void Loc_ZeroEntries();
+//Zeros all entries and keep the previous matrix pattern;
+	
+void MA(Nilpotency<S> nilp, parMatrixSparse<T,S> *prod);
+//matrix multiple a special nilpotent matrix;
+	
+void AM(Nilpotency<S> nilp, parMatrixSparse<T,S> *prod);
+//special nilpotent matrix multiple another matrix;
+	
+	\end{lstlisting}
+	
+	\subsection{Creating a Distributed Matrix}
+	
+	The is an example of creating distributed matrix with the mapping of distributed vector.
+	
+	\begin{lstlisting}[language=C++,frame=single]
+/*lower_b and upper_b of each proc is given*/
+
+parVector<T,S> *vec = new parVector<T,S>(   \
+comm,lower_b, upper_b);
+
 parMatrixSparse<T,S> *A=new parMatrixSparse<T,S>(vec,vec);
 	\end{lstlisting}
 	
@@ -266,27 +438,52 @@ parMatrixSparse<T,S> *A=new parMatrixSparse<T,S>(vec,vec);
 		% -------------------------------------------------------------------------------------
 	%SMG2S Parallel Matrix and Vector
 	% -------------------------------------------------------------------------------------
-	\chapter{Templated  Nilpotency Matrix Object}
+	\chapter{Templated  Nilpotent Matrix Object}
 	\section{Introduction}
-	\section{Creating a Nilpotency Matrix Object}
+	The nilpotent matrix is very important for the generation of test matrices with given spectrum. Il can be defined by several parameters, the explicit implementation is not necessary.
+	
+	\begin{figure}[htbp]
+		\label{fig:nilpotent matrix}
+		\caption{Nilpotent Matrix}
+		\centering
+		\includegraphics[width=5cm]{nilpotent_matrix.pdf}
+	\end{figure}
+
+	The three parameters defined a nilpotent matrix is listed as:
+	
+	\begin{itemize}
+		\item \textbf{dIagPostion}: the distance of the off-diagonal to the diagonal, refering to $p$ in Fig. \ref{fig:nilpotent matrix};
+		\item \textbf{length}: the continuous one on the off-diagonal of nilpotent matrix, refering to $d$ in Fig. \ref{fig:nilpotent matrix};
+		\item \textbf{probSize}: the number of row/column of nilpotent matrix, refering to $n$ in Fig. \ref{fig:nilpotent matrix}.
+	\end{itemize}
+
+	\section{Different Types of Nilpotent Matrix}
+
+The different nilptent matrix will influence the sparsity pattern of final generated matrix.
+
+\begin{itemize}
+	\item NilpType1: diagPostion = 2
+	\item NilpType2: diagPostion = 3
+	\item NilpType3: diagPostion $>$ 3
+\end{itemize}
+
+
+	\section{Creating a Nilpotent Matrix Object}
 	
 	\begin{lstlisting}[language=C++,frame=single]
    Nilpotency<int> nilp;
    nilp.NilpType1(length,probSize);
+   //
+   nilp.NilpType2(length,probSize);
+   //
+   nilp.NilpType3(diagPostion, length,probSize);
 	\end{lstlisting}
 	
-	\section{Different Types of Nilpotency Matrix}
-	
-	\begin{itemize}
-		\item NilpType1;
-		\item NilpType2;
-		\item NilpType3;
-	\end{itemize}
-	\section{Parameter Validation for Nilpotency Matrix}
+	\section{Parameter Validation for Nilpotent Matrix}
 	\begin{itemize}
 	\item NilpType1: parameter \textcolor{blue}{length} can be any integer value $>$ 0;
 	\item NilpType2: parameter \textcolor{blue}{length} sould be even;
-	\item NilpType3: validation of parameter \textcolor{blue}{length} is complex. Firstly, $length$ should be divisible by $p$, secondly, it should exist the integers $e$ and $f\in \mathbb{N^*}$ that makes $(d+1)e$ be divisible by $i+pf$,  for all $i \in 1,2,\cdots, \frac{d}{p}$.
+	\item NilpType3: validation of parameter \textcolor{blue}{length} is complex. $length$ should be divisible by $p$.
 \end{itemize}
 
 	\newpage
@@ -623,6 +820,35 @@ void smg2s______(struct parMatrixSparse______ \
 
 	\href{https://github.com/SMG2S/SMG2S/tree/master/example/teptra}{Here is a full \textcolor{blue}{ example of Trilinos}.}
 	
+	\section{Create Your Inferface}
+	
+	On each process, the submatrix is stored by the std::map$<$T,S$>$ provided by C++, which can be get the function $GetDynMatLoc$ implemented in the sparse matrix implementation. The column index and related entry value can be gotten by the C++ iterator.
+	
+	\begin{lstlisting}[language=C++,frame=single]
+	
+parMatrixSparse<S, T > *M
+	
+T col;
+S val;
+	
+/*On each process*/
+parVectorMap<T> *pmap = M->GetYMap();
+   
+/*Get row number on each proc*/
+T lsize = pmap->GetLocalSize(); 
+   
+std::map<T, S> *dynloc;
+std::map<T, S>::iterator it;
+   
+dynloc = M->GetDynMatLoc();
+/*Get col indices and values*/
+for(T i = 0; i < lsize; i++){
+ for(it = dynloc[i].begin(); it != dynloc[i].end(); ++it){
+   	col = it->first;
+   	val = it->second;
+ }
+}
+	\end{lstlisting}
 	\newpage
 
 	% -------------------------------------------------------------------------------------
