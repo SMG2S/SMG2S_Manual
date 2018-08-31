@@ -711,11 +711,19 @@ void smg2s______(struct parMatrixSparse______ \
 	
 	SMG2S uses SWIG to generate the wrapper of SMG2S to Python. Generate the shared library and install the python module of smg2s.
 	\begin{lstlisting}[language=bash,frame=single]
+   #install online from pypi
+   CC=mpicxx pip install smg2s
+	
+   #bulid in local
    cd ./interface/python;
-   mpicxx -fpic -c smg2s_wrap.cxx  -I/apps/python/3/   \
-   include/python3.5m -std=c++0x
-   mpicxx -shared smg2s_wrap.o -o _smg2s.so
-   python setup.py install
+   CC=mpicxx python setup.py build_ext --inplace
+   #or
+   CC=mpicxx python setup.py build
+   #or
+   CC=mpicxx python setup.py install
+
+   #run
+   mpirun -np 2 python generate.py
 	\end{lstlisting}
 	
 	Before the utilisation, make sure that \textbf{mpi4py} is installed.
