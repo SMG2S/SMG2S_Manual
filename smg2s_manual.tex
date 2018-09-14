@@ -30,12 +30,14 @@
 \title{{\Huge SMG2S Manual}\\
 	%Application Program Interface\\
 	\vspace{1cm}
-	\large {For SMG2S Release 1.0.0} \\
+	\large {For SMG2S Release 1.0.1} \\
 	\vspace{2cm}
 	\Large	Version 1.0\\}
 %DRAFT 0.7}
 \author{
 	\Large Xinzhe Wu\\
+	~\\
+	Maison de la Simulation, Gif-sur-Yvette, France
 }
 
 % -------------------------------------------------------------------------------------
@@ -46,7 +48,7 @@
 	\maketitle
 	\pagestyle{empty}
 	Copyright \copyright 2018 smg2s.github.io ALL RIGHTS RESERVED.
-	Report may not be copied for commercial redistribution, republication, or dissemination without the explicit permission
+	Report may not be copied for commercial redistribution, republication, or dissemination without the explicit permission.
 	% -------------------------------------------------------------------------------------
 	% TABLE OF CONTENTS
 	% -------------------------------------------------------------------------------------
@@ -71,20 +73,21 @@
 	
 	\section{Getting Started}
 
-	SMG2S (Scalable Matrix Generator with Given Spectrum) is a software which provides to generator the non-Hermitian Matrices with User-customized eigenvalues. SMG2S is implemented in parallel based on MPI (Message Passing Interface) and C++11 to support efficiently the generation of test matrices on distributed memory platforms.
+    SMG2S (Scalable Matrix Generator with Given Spectrum) \cite{galichergenerate, wu2018parallel} is a software which provides for generating the non-Hermitian Matrices with user-customized eigenvalues. SMG2S is implemented in parallel based on MPI (Message Passing Interface) and C++11 to support efficiently the generation of test matrices in parallel on distributed memory platforms.
 
-	Iterative linear algebra methods are important for the applications in various fields. The analysis of the iterative method behaviors is complex, and it is necessary to evaluate their convergence to solve extremely large non-Hermitian eigenvalue and linear problems on parallel and/or distributed machines. This convergence depends on the properties of spectra. Thus, we propse SMG2S to generate large matrices with known spectra to benchmark these methods. The generated matrices are non-Hermitian and non-trivial, with very high dimension. SMG2S can generate the non-Hermitian matrices with user-custormized eigenvalues. 
-	
-	The ability of SMG2S to keep the accuracy of given spectrum can be verified by the functionality proposed inside SMG2S. This function is based the shift inverse power method. SMG2S gives also an graphic user interface to compare the given and final spectral distribution for the verification.
+Iterative linear algebra methods are essential for the applications in various fields. The analysis of the iterative method behaviors is complex, and it is necessary to evaluate their convergence to solve extremely large non-Hermitian eigenvalue and linear problems on parallel and/or distributed machines. This convergence depends on the properties of spectra. Thus, we propose SMG2S to generate large matrices with known spectra to benchmark these methods. The generated matrices are non-Hermitian and non-trivial, with very high dimension.
 
-	We will describe the following subset of the SMG2S.
-	\begin{itemize}
-		\item \textbf{Parallel Vector and Matrix:}
-		\item \textbf{Nilpotency Matrix Object:}
-		\item \textbf{Generating Matrix with predescribed eigenvalues:}
-		\item \textbf{Interface to Other Languages/Libraries:}
-		\item \textbf{Verification of Eigenvalues of Generated Matrix:}
-	\end{itemize}
+The functionality proposed inside SMG2S can verify the ability of SMG2S to keep the accuracy of a given spectrum. This function is based on the shift inverse power method. SMG2S also gives a graphic user interface to compare the given and final spectral distribution for the verification.
+
+We will describe the following subset of the SMG2S.
+
+    \begin{itemize}
+	\item \textbf{Parallel Vector and Matrix:} this part presents the functions implemented in SMG2S to establish parallel vector and matrix over distributed memory platforms.
+	\item \textbf{Nilpotent Matrix Object:} this part presents a special nilpotent matrix object for the matrix generation procedure in SMG2S.
+	\item \textbf{Generating Matrix with prescribed eigenvalues:} this part gives the way to use SMG2S to generate required test matrices.
+	\item \textbf{Interface to Other Languages/Libraries:} this part introduces the interface of SMG2S to other languages and existing scientific computational libraries such as PETSc and Trilinos.
+	\item \textbf{Verification of Eigenvalues of Generated Matrix:} this part gives the way to verify the accuracy of eigenvalues of generated matrices comparing with given spectrum. A graphic user interface is also provided to facilitate the comparison.
+\end{itemize}
 
 	\section{Installation}
 	To obtain SMG2S, please follow the instructions at the SMG2S download page: https://smg2s.github.io/download.html.
@@ -97,7 +100,7 @@
 		\item (Optional) PETSc and SLPEc are necessary for the verification of the ability to keep the given spectrum.
 	\end{itemize}
 	
-	Int the main directory:
+	In the main directory:
 	
 	\begin{lstlisting}[language=bash,frame=single]
    cmake .  -DCMAKE_INSTALL_PREFIX=${INSTALL_DIRECTORY}
@@ -109,19 +112,19 @@
    make
 	\end{lstlisting}
 
-	The main part of SMG2S is a colllection of header files. Install the header files into \$\{INSTALL\_DIRECTORY\}
-
+	    The main part of SMG2S is a collection of header files. Install the header files into \$\{INSTALL\_DIRECTORY\}
+	    
 	\begin{lstlisting}[language=bash,frame=single]
    make install
 	\end{lstlisting}
 
-	For testing:
+	For testing the software in your platforms:
 	
 	\begin{lstlisting}[language=bash,frame=single]
    make test
 	\end{lstlisting}
 	
-	The output of test should be like:
+	The output of the test should be like:
 \begin{lstlisting}[frame=single]
    Running tests...
    Test project /User/name/SMG2S
@@ -140,7 +143,7 @@
 \end{lstlisting}
 
 	\section{CMake Options}
-	We uses CMake is to build, test and package SMG2S. If you do not have PETSc and SLEPc in your platform, please make sure the option below is \textcolor{red}{OFF}.
+	We use CMake to build, test and package SMG2S. If you do not have PETSc and SLEPc in your platform, please make sure the option below is \textcolor{red}{OFF} in \textcolor{blue}{CMakeLists.txt}.
 	
 	\begin{lstlisting}[language=bash,frame=single]
 option(INSTALL_TO_USE "Install SMG2S include files?" OFF)
@@ -148,7 +151,7 @@ option(INSTALL_TO_USE "Install SMG2S include files?" OFF)
 	
 	\section{Copyright and Licensing of SMG2S}
 	
-	SMG2S is a open source software published under the GNU Lesser General Public License v3.0. SMG2S can be redistributed and modified under the terms of this license.
+	SMG2S is an open source software published under the GNU Lesser General Public License v3.0. SMG2S can be redistributed and modified under the terms of this license.
 	
 	SMG2S is free software: you can redistribute it and/or modify
 	it under the terms of the GNU Lesser General Public License as published
@@ -166,11 +169,23 @@ option(INSTALL_TO_USE "Install SMG2S include files?" OFF)
 	
 	\section{Referencing SMG2S}
 	
-	@article\{galichergenerate, title=\{Generate Very Large Sparse Matrices Starting from a Given Spectrum\},  author=\{Galicher, Herv{\'e} and Boillod-Cerneux, France and Petiton, Serge and Calvin, Christophe\}
-	\}
+	Place cite these papers if you want to reference SMG2S.
+	
+	\begin{itemize}
+		\item @article\{galichergenerate, title=\{Generate Very Large Sparse Matrices Starting from a Given Spectrum\},  author=\{Galicher, Herv{\'e} and Boillod-Cerneux, France and Petiton, Serge and Calvin, Christophe\}
+		\}
+
+		\item @inproceedings\{wu2018parallel,
+			title=\{A Parallel Generator of Non-Hermitian Matrices computed from Given Spectra\},
+			author=\{Wu, Xinzhe and Petiton, Serge and Lu, Yutong\},
+			booktitle=\{VECPAR 2018: 13th International Meeting on High Performance Computing for Computational Science\},
+			year=\{2018\}\}		
+	\end{itemize}
+
+
 	\section{Directory Structure}
 	
-	SMG2S is a collection of header files, and its directory structure is given as follows:
+	The directory structure of SMG2S is given as follows:
 	
 	\dirtree{%
 		.1 SMG2S.
@@ -212,7 +227,7 @@ option(INSTALL_TO_USE "Install SMG2S include files?" OFF)
 	\begin{center}
 		\begin{tabular}{ |c|c|c| } 
 			\hline
-			Xinzhe Wu & main constributor & xinzhe.wu@cea.fr \\ 
+			Xinzhe Wu & main constributor & xinzhe.wu@ed.univ-lille1.fr \\ 
 			\hline
 			Serge Petiton & Supervisor & serge.petiton@univ-lille1.fr \\ 
 			\hline
@@ -228,10 +243,13 @@ option(INSTALL_TO_USE "Install SMG2S include files?" OFF)
 	% -------------------------------------------------------------------------------------
 	\chapter{Templated  SMG2S Parallel Matrix and Vector}
 	\section{Parallel Vector}
+	
+    The distributed vector inside SMG2S is implemented using the C++ programming language and MPI. The parallel vector implementation is composed of two main classes:     $parVectorMap$ and $parVector$. $parVectorMap$ class is a vector index map which controls the partitioning and distribution over the processes, and $parVector$ is the parallel vector itself, which contains the actual distributed data and the corresponding functions controlling the data.
+	
 	\subsection{Vector Map}
 	
-	The distribution of a set of integer labels (or elements) across the processes is here called a
-	$parVectorMap$. In SMG2S, it is implemented with the help of $std::map$, which maps the proc number and related intergers. Bascically, 	$parVectorMap$ handles the definition of global and local indices for the mapping across the processes. Here we give some methods of $parVectorMap<S>$:
+The distribution of a set of integer labels (or elements) across the processes is here called a
+$parVectorMap$. In SMG2S, it is implemented with the help of $std::map$, which maps the proc number and related integers. Basically,     $parVectorMap$ handles the definition of global and local indices for the mapping across the processes. Here we give some methods of $parVectorMap<S>$:
 	
 		\begin{lstlisting}[language=C++,frame=single]
    S Loc2Glob(S local_index);
@@ -259,7 +277,8 @@ option(INSTALL_TO_USE "Install SMG2S include files?" OFF)
 	
 	\subsection{Creating a Distributed Vector}
 	
-	A distributed vector $parVector$ accross the processes can be created with the help of $parVectorMap$. The entries of $parVector$ is distributed over different processes refering to the $parVectorMap$. $parVector<T,S>$ is implemented with C++ template supported, with T the data type of entry, and S the data type of index.  
+    A parallel vector $parVector$ across the processes can be created with the help of $parVectorMap$. The entries of $parVector$ are distributed over different processes referring to the $parVectorMap$. $parVector<T,S>$ is implemented with the C++ template, with T the data type of entry, and S the data type of index.  
+
 
 This is the constructor of $parVector$, with $MPI\_Comm$ $ncomm$ the working MPI communicator, $S$$ lbound$ and $S$$ ubound$ respectively the lower and upper bound of vector global indices on each proc.
 \begin{lstlisting}[language=C++,frame=single]
@@ -332,7 +351,8 @@ Here we give some methods of $parVector$:
   
    \end{lstlisting}
 	
-	Here we give an example to generate a $parVector$
+	Here we give an example to generate a $parVector$ by SMG2S:
+	
 	\begin{lstlisting}[language=C++,frame=single]
    int world_size;
    int world_rank;
@@ -358,7 +378,7 @@ Here we give some methods of $parVector$:
 	
 	\subsection{Parallel Matrix}
 	
-	The one-dimensional row-major parallel matrix $parMatrixSparse$ in SMG2S is distributed with the same $parVectorMap$ of a given $parVector$. On each proces, the columns indices and the entries values are stored by a $std::map<T, S>$ with S data type of indices and T data type of entries.
+	The one-dimensional row-major parallel matrix $parMatrixSparse$ in SMG2S is distributed with the same $parVectorMap$ of a given $parVector$. On each process, the columns indices and the entries values are stored by a $std::map<T, S>$ with S data type of indices and T data type of entries.
 	
 	This is the constructor of $parMatrixSparse$:
 	
@@ -423,7 +443,7 @@ void AM(Nilpotency<S> nilp, parMatrixSparse<T,S> *prod);
 	
 	\subsection{Creating a Distributed Matrix}
 	
-	The is an example of creating distributed matrix with the mapping of distributed vector.
+	The is an example of creating a distributed matrix with the mapping of parallel vector:
 	
 	\begin{lstlisting}[language=C++,frame=single]
 /*lower_b and upper_b of each proc is given*/
@@ -459,7 +479,7 @@ parMatrixSparse<T,S> *A=new parMatrixSparse<T,S>(vec,vec);
 
 	\section{Different Types of Nilpotent Matrix}
 
-The different nilptent matrix will influence the sparsity pattern of final generated matrix.
+The different nilpotent matrix will influence the sparsity pattern of the final generated matrix.
 
 \begin{itemize}
 	\item NilpType1: diagPostion = 2
@@ -519,32 +539,35 @@ The different nilptent matrix will influence the sparsity pattern of final gener
 	
 	
 	\section{Generation Workflow}
-	Include the head file:
-	
-	\begin{lstlisting}[language=C++,frame=single]
-   #include <smg2s/smg2s.h>
-	\end{lstlisting}
-	
-	Generate the Nilpotent Matrix Object:
-
-	\begin{lstlisting}[language=C++,frame=single]
-   Nilpotency<int> nilp;
-   nilp.NilpType1(length,probSize);
-	\end{lstlisting}
-
-	Create the parallel Sparse Matrix Object Mt:
-
-	\begin{lstlisting}[language=C++,frame=single]
-   parMatrixSparse<std::complex<double>,int> *Mt;
-	\end{lstlisting}
-	
-	Generate a new matrix by SMG2S:
-
-	\begin{lstlisting}[language=C++,frame=single]
-   MPI_Comm comm; //working MPI Communicator
-   Mt = smg2s<std::complex<double>,int>(probSize, nilp, 
-   lbandwidth, spectrum, comm);
-	\end{lstlisting}
+	\begin{enumerate}
+		\item  Include the head file
+		
+		\begin{lstlisting}[language=C++,frame=single]
+  #include <smg2s/smg2s.h>
+		\end{lstlisting}
+		
+		\item Generate the Nilpotent Matrix Object:
+		
+		\begin{lstlisting}[language=C++,frame=single]
+  Nilpotency<int> nilp;
+  nilp.NilpType1(length,probSize);
+		\end{lstlisting}
+		
+		\item Create the parallel Sparse Matrix Object Mt:
+		
+		\begin{lstlisting}[language=C++,frame=single]
+  parMatrixSparse<std::complex<double>,int> *Mt;
+		\end{lstlisting}
+		
+		\item Generate a new matrix by SMG2S:
+		
+		\begin{lstlisting}[language=C++,frame=single]
+  MPI_Comm comm; //working MPI Communicator
+  Mt = smg2s<std::complex<double>,int>(probSize, nilp, 
+  lbandwidth, spectrum, comm);
+		\end{lstlisting}
+		
+	\end{enumerate}
 	
 	Here, the \textbf{probsize} parameter represent the matrix size, \textbf{nilp} is the nilpotency matrix object that we have declared previously, \textbf{lbandwidth} is the bandwidth of lower-diagonal band. \textbf{spectrum} is the file path of spectra file, if \textbf{spectrum} is set as \textbf{" "}, SMG2S will use the mechanism inside to generate the spectral distribution. \textbf{comm} is the basic object used by MPI to determine which processes are involved in a communication.
 	
@@ -573,8 +596,8 @@ In the directory \textcolor{blue}{./verification/tests}, we give an example to g
 If the users want to generate the eigenvalues in time without loading from local file, they can customize their eigenvalues generation by the function \textcolor{blue}{specGen} in the file \textcolor{blue}{./verification/tests/specGen.h}, and set the parameter \textcolor{blue}{spectrum} of \textcolor{blue}{smg2s} to be \textcolor{blue}{" "}.
 
 	\begin{lstlisting}[language=C++,frame=single]
-template<typename T, typename S>
-void parVector<T,S>::specGen(std::string spectrum)
+   template<typename T, typename S>
+   void parVector<T,S>::specGen(std::string spectrum)
 \end{lstlisting}
 
 In this function, the eigenvalues are stored by the distributed vector textcolor{blue}{parVector}. And the filling of values on this parVector can be done by  the method \textcolor{blue}{SetValueGlobal} implemented in \textcolor{blue}{parVector}, which takes the global indices to set values.
@@ -600,12 +623,13 @@ In this function, distributed matrix $Am$ and $matAop$ should be filled with the
 	% Interface
 	% -------------------------------------------------------------------------------------
 	\chapter{Interface to Other Languages/Libraries}
-	SMG2S provides interfaces to C, Python, PETSc and Trilinos.
+	Until now, SMG2S provides interfaces to C, Python, PETSc and Trilinos.
 	
 	\section{Interface to C}
 	SMG2S install command will generate a shared library \textcolor{blue}{libsmg2s.so} (\textcolor{blue}{libsmg2s2c.dylib} on OS X platform) into \$\{INSTALL\_DIRECTORY\}/lib. It can be used to profit the C wrapper of SMG2S. 
 	
 	The way to use:
+	
 	1. Add this shared library to \textcolor{blue}{LD\_LIBRARY\_PATH}:
 	
 	\begin{lstlisting}[language=bash,frame=single]
@@ -628,30 +652,31 @@ In this function, distributed matrix $Am$ and $matAop$ should be filled with the
 	4. After that, you need to create the parallel Sparse Matrix Object Mt like this :
 
 	\begin{lstlisting}[language=C,frame=single]
-   struct parMatrixSparseDoubleInt *m;
-   m = newParMatrixSparseDoubleInt();
+   struct parMatrixSparseRealDoubleInt *m;
+   m = newParMatrixSparseRealDoubleInt();
 	\end{lstlisting}
 
 	5. Generate by SMG2S :
 	
 	\begin{lstlisting}[language=C,frame=single]
-   smg2s(m, 10, n, 3 ," ",MPI_COMM_WORLD);
+   smg2sRealDoubleInt(m, 10, n, 3 ," ",MPI_COMM_WORLD);
     \end{lstlisting}
 
    6. Release Nilpotency Object and parMatrixSparse Object :
 	\begin{lstlisting}[language=C,frame=single]
-   smg2s(m, 10, n, 3 ," ",MPI_COMM_WORLD);
+   ReleaseNilpotencyInt(&n);
+   ReleaseParMatrixSparseRealDoubleInt(&m);
    \end{lstlisting}
 
-	SMG2S provides the C interface to different data types. For the data type of matrix size, it can be either $int$ or $long int$; for the data type of matrix entries, it can be either $complex$ or $real$ with $single$ or double precision.
+	SMG2S provides the C interface to different data types. For the data type of matrix size, it can be either $int$ or $long int$; for the data type of matrix entries, it can be either $complex$ or $real$ with $single$ or $double$ precision.
 	
-	The  Nilpotency Matrix object is implemented for both $int$ and $long int$ as below:
+	The  Nilpotent Matrix object is implemented for both $int$ and $long int$ as below:
 		\begin{lstlisting}[language=C,frame=single,	basicstyle=\footnotesize]
 struct NilpotencyInt;
 struct NilpotencyLongInt;
 		\end{lstlisting}
 	
-	The interface of C for parMatrixSparse Object and smg2s function can be defined as below, $\_\_\_\_\_\_$ can be replaced by the selected data type, as one of :
+	The interface of C for parMatrixSparse Object and smg2s function can be defined as below, \textbf{SUFFIX} can be replaced by one of the selected data types:
 	
 	\begin{multicols}{2}
 	\begin{itemize}
@@ -667,41 +692,38 @@ struct NilpotencyLongInt;
 	\end{multicols}
 
 	\begin{lstlisting}[language=C,frame=single,	basicstyle=\footnotesize]
-//double + complex + int64
-struct parMatrixSparse______;   
+//long int case
+
+struct parMatrixSparseSUFFIX;   
 /*parVectorMap C wrapper*/
-
-struct parVectorMapInt *newparVectorMapInt(void);
-
-or 
 
 struct parVectorMapLongInt *newparVectorMapLongInt(void);
 
 /*complex double long int*/
    
-struct parMatrixSparseComplex______ *newPar\
-MatrixSparse______(void);
+struct parMatrixSparseComplexSUFFIX *newPar\
+MatrixSparseSUFFIX(void);
 
-void ReleaseParMatrixSparse______(struct \
-parMatrixSparse______ **ppInstance);
+void ReleaseParMatrixSparseSUFFIX(struct \
+parMatrixSparseSUFFIX **ppInstance);
 
-void LOC_MatView______(struct parMatrix\
-Sparse______ *m);
+void LOC_MatViewSUFFIX(struct parMatrix\
+SparseSUFFIX *m);
 
-void GetLocalSize______(struct parMatrix\
-Sparse______ *m, __int64_t *rs, __int64_t *cs);
+void GetLocalSizeSUFFIX(struct parMatrix\
+SparseSUFFIX *m, __int64_t *rs, __int64_t *cs);
 
-void Loc_ConvertToCSR______(struct parMatrix\
+void Loc_ConvertToCSRSUFFIX(struct parMatrix\
 SparseComplexDoubleLongInt *m);
    
-void Loc_CSRGetRowsArraySizes______(struct parMatri\
-xSparse______ *m, __int64_t *size,__int64_t *size2);
+void Loc_CSRGetRowsArraySizesSUFFIX(struct parMatri\
+xSparseSUFFIX *m, __int64_t *size,__int64_t *size2);
 
-void Loc_CSRGetRowsArrays______(struct par\
-MatrixSparse______ *m, __int64_t size, int **rows,\
+void Loc_CSRGetRowsArraysSUFFIX(struct par\
+MatrixSparseSUFFIX *m, __int64_t size, int **rows,\
 __int64_t size2, int **cols, double **real, double **imag);
 
-void smg2s______(struct parMatrixSparse______ \
+void smg2sSUFFIX(struct parMatrixSparseSUFFIX \
  *m, __int64_t probSize, struct NilpotencyLongInt \
 *nilp, __int64_t lbandwidth, char *spectrum, MPI_Comm comm);
    
@@ -726,9 +748,9 @@ void smg2s______(struct parMatrixSparse______ \
    mpirun -np 2 python generate.py
 	\end{lstlisting}
 	
-	Before the utilisation, make sure that \textbf{mpi4py} is installed.
+	Before the utilization, make sure that \textbf{mpi4py} is installed.
 	
-   This is	a little example of usge :
+   This is	a little example of usage :
 	\begin{lstlisting}[language=Python,frame=single]
    from mpi4py import MPI
    import smg2s
@@ -769,7 +791,6 @@ void smg2s______(struct parMatrixSparse______ \
 	
 	The way of Usage:
 	
-	Include header file:
 	Include the header file:
    \begin{lstlisting}[language=C,frame=single]
    #include <interface/PETSc/petsc_interface.h>
@@ -830,7 +851,7 @@ void smg2s______(struct parMatrixSparse______ \
 	
 	\section{Create Your Inferface}
 	
-	On each process, the submatrix is stored by the std::map$<$T,S$>$ provided by C++, which can be get the function $GetDynMatLoc$ implemented in the sparse matrix implementation. The column index and related entry value can be gotten by the C++ iterator.
+	On each process, the submatrix is stored by the std::map$<$T,S$>$ provided by C++, which can be gotten through the function $GetDynMatLoc$ implemented in the sparse matrix implementation. The column index and related entry value can be gotten by the C++ iterator.
 	
 	\begin{lstlisting}[language=C++,frame=single]
 	
@@ -868,7 +889,7 @@ for(T i = 0; i < lsize; i++){
 	
 	\section{Prerequisites}
 	
-	The verfication method is implemented based on the shifted inverse method proposed by PETSc/SLEPc. Before the starting of verification, it is necessary to have the two on the platforms.
+    The verification method is implemented based on the shifted inverse method proposed by PETSc/SLEPc. Before the starting of verification, it is necessary to have the two on the platforms.
 	
 	If not, the download and installation of PETSc can be found: \href{https://www.mcs.anl.gov/petsc/download/index.html}{\textcolor{blue}{[PETSc Download]}} and \href{https://www.mcs.anl.gov/petsc/documentation/installation.html}{\textcolor{blue}{[SLPEc Installation]}}. The download and installation of PETSc can be found: \href{http://slepc.upv.es/download/}{\textcolor{blue}{[SLEPc Download]}} and \href{http://slepc.upv.es/documentation/instal.htm}{\textcolor{blue}{[SLEPc Installation]}}.
 	
@@ -882,7 +903,7 @@ for(T i = 0; i < lsize; i++){
 	
 	This will generate an executable  \textcolor{blue}{powerInverse.exe}.
 	
-	2. Suppose the given eigenvalues are stored in the file \textcolor{blue}{vector.txt} by the pseudo-Matrix Matrix Vector format, run the verification script as blow:
+	2. Suppose the given eigenvalues are stored in the file \textcolor{blue}{vector.txt} by the pseudo-Matrix Matrix Vector format, run the verification script as below:
 		\begin{lstlisting}[language=bash,frame=single]
 #!/bin/bash
 EXEC=./powerInverse.exe
@@ -906,7 +927,7 @@ done
 
    \end{lstlisting}
 
-	Here we list the meaning of the important parameters in the script above:
+	Here we list the meaning of the critical parameters in the script above:
 	
 	\begin{itemize}
 		\item N: the size of matrix to generate, which should be equal to the number of given eigenvalues;
@@ -943,17 +964,17 @@ rm tmp.txt tmp2.txt tmp3.txt tmp4.txt tmp5.txt
    ./traitement.sh results.txt results_clean.txt
 	\end{lstlisting}
 	
-	In this command, The 1st and 2nd arugments for the execution are seperately the initial results file and the final cleaned and formatted file.
+    In this command, the 1st and 2nd arguments for the execution are separately the initial results file and the final cleaned and formatted file.
 	
 	\section{Plot by Graphic User Interface}
 
 	\subsection{Prerequisites for GUI}
 	
-	You need to have Python2.X or Python3.X to run it. Moreover, UI uses some libraries to support a dynamic and intuitive graphical user interface, you can see the list of libraries. Normally, some of them are include in Python distribution. You can find below the list of necessary libraries of the UI.
+    You need to have Python2.X or Python3.X to run it. Moreover, UI uses some libraries to support a dynamic and intuitive graphical user interface, you can see the list of libraries. Normally, some of them are included in Python distribution. You can find below the list of necessary libraries of the UI.
 	
 	\begin{itemize}
-		\item Modules which are bundled in the Python installation : Tkinter, re, sys, decimal ;
-		\item Modules which need to be installed in addition to Python : NumPy \& SciPy, Matplotlib, Pillow(PIL)
+    \item Modules which are bundled in the Python installation: Tkinter, re, sys, decimal ;
+\item Modules which need to be installed in addition to Python: NumPy \& SciPy, Matplotlib, Pillow(PIL)
 	\end{itemize}
 
 	Install modules to Python 2.X:
@@ -1008,7 +1029,7 @@ After that, you can click on "Display" to build and open the graphic on the righ
 	\includegraphics[width=12cm]{home_screen.png}
 \end{figure}
 
-Your will be generate with automatic lens scaling, but your can generate it with your own scales as Fig. \ref{fig:Home Screen Plot Capture with lens scaling}:
+It will be generate with automatic lens scaling, but your can generate it with your own scales as Fig. \ref{fig:Home Screen Plot Capture with lens scaling}:
 
 \begin{figure}[htbp]
 	\label{fig:Home Screen Plot Capture with lens scaling}
@@ -1017,8 +1038,11 @@ Your will be generate with automatic lens scaling, but your can generate it with
 	\includegraphics[width=12cm]{home_screen_custom.png}
 \end{figure}
 
-
 	\newpage
+	
+	\bibliographystyle{abbrv}
+	\bibliography{mybibfile}
+	
 	% -------------------------------------------------------------------------------------
 	% END DOCUMENT
 	% -------------------------------------------------------------------------------------
