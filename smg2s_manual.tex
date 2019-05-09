@@ -13,10 +13,16 @@
 \usepackage{dirtree} % for directory structure.
 \usepackage{graphicx}
 \graphicspath{ {./img/} }
-
+\usepackage{amsmath}
 \usepackage{amsfonts} 
 \usepackage{multicol}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage[scientific-notation=true]{siunitx}
+\usepackage[noend]{algpseudocode}
 \setlength{\columnsep}{0.8in}
+
+\newtheorem{theorem}{Theorem}
 
 \hypersetup{
 	colorlinks,
@@ -30,9 +36,9 @@
 \title{{\Huge SMG2S Manual}\\
 	%Application Program Interface\\
 	\vspace{1cm}
-	\large {For SMG2S Release 1.0.1} \\
+	\large {For SMG2S Release 1.1} \\
 	\vspace{2cm}
-	\Large	Version 1.0\\}
+	\Large	Version 1.1\\}
 %DRAFT 0.7}
 \author{
 	\Large Xinzhe Wu\\
@@ -459,7 +465,8 @@ parMatrixSparse<T,S> *A=new parMatrixSparse<T,S>(vec,vec);
 	%SMG2S Parallel Matrix and Vector
 	% -------------------------------------------------------------------------------------
 	\chapter{Templated  Nilpotent Matrix Object}
-	\section{Introduction}
+	
+	\section{Introduction}\label{Introduction_nilp}
 	The nilpotent matrix is very important for the generation of test matrices with given spectrum. Il can be defined by several parameters, the explicit implementation is not necessary.
 	
 	\begin{figure}[htbp]
@@ -1037,6 +1044,88 @@ It will be generate with automatic lens scaling, but your can generate it with y
 		\centering
 	\includegraphics[width=12cm]{home_screen_custom.png}
 \end{figure}
+
+	\newpage
+	
+	\chapter{Generation Methodologies}
+	
+	In this chapter, we summarize the methodologies for the generation of both non-Hermitian and non-Symmetric matrices.
+	
+	\section{Theorem} \label{Matrix_Generation_Method}
+	
+	\begin{theorem}
+		\label{theo1}
+		Let's consider a collection of matrices $M(t) \in \mathbb{C}^{n \times n}$, $n \in \mathbb{N}^*$. If $M(t)$ verifies: 
+		\[
+		\left\{\
+		\begin{aligned}
+		&\frac{dM(t)}{dt} = AM(t) - M(t)A, \\
+		&M(t=0) = M_0. \\ 
+		\end{aligned}
+		\right.
+		\]
+		Then $M(t)$ and $M_0$ are similar. $M(t)$ has the same eigenvalues as $M_0$.
+	\end{theorem}
+	
+	Based on this theorem proposed by H. Gachlier \cite{galichergenerate}, a matrix $M_0$ with given spectra can be transferred to another one $M(t)$ that satisfies $Theorem$ $\ref{theo1}$ and keeps the spectra of $M_0$. SMG2S is proposed by selecting many parameters such as the matrices $A$ and $M_0$. 
+	
+	In details, we select $A$ as a nilpotent matrix shown as Fig. \ref{fig:nilpotent matrix}, and $M_0$ can be an initial simple matrix with customized eigenvalues, e.g., $M_0$ can be diagonal, block diagonal, upper triangular and lower triangular.
+	
+	\section{Algorithm}
+	
+	For the selected $A$ and $M_0$, the procedure of SMG2S is simple, which is shown as Algorithm \ref{alg:matgen}. Firstly, it reads an array $Spec_{in} \in \mathbb{C}^{n}$, as the given eigenvalues.  Secondly, it generates an initial $M_0$ with $Spec_{in}$, and scales it with $(2d)!$. Meanwhile, it generates a nilpotent matrix $A$ with the parameters $d$ and $p$. More details about the generation of $A$ can be found in Section \ref{Introduction_nilp}. The final matrix $M_t$ can be generated as $M_t=\frac{1}{(2d)!}M_{2d}$, where $M_{2d}$ is the result after $2d$ times of loop $M_{i+1}=M_i+(\prod_{k=i+1}^{2d}k)(\widetilde{A_A})^i(M_0)$. 
+	
+	\begin{algorithm*}[htbp]{}
+		\caption{Matrix Generation Method}   
+		\label{alg:matgen}   
+		\begin{algorithmic}[1]
+			\Function {matGen}{$input$:$Spec_{in} \in \mathbb{C}^n$, $p$, $d$, $h$, $output$: $M_t \in \mathbb{C}^{n\times n}$}
+			\State Insert the entries in $h$ lower diagonals of $M_o \in \mathbb{C}^{n \times n}$
+			\State Generate $M_0$ with $Spec_{in}$, then $M_0=(2d)!M_0$ \label{alg:generate}
+			\State Generate nilpotent matrix $A \in \mathbb{C}^{n\times n}$ with selected parameters $d$ and $p$
+			\For {\texttt{$i=0, \cdots, 2d-1$}}
+			\State $M_{i+1}=M_i+(\prod_{k=i+1}^{2d}k)(\widetilde{A_A})^i(M_0)$
+			\EndFor 
+			\State $M_t = \frac{1}{(2d)!}M_{2d}$
+			\EndFunction
+		\end{algorithmic}
+	\end{algorithm*}
+	
+	\section{Initialization of $M_0$}
+	
+	There are different ways to form the initial matrix $M_0$ with given spectrum $Spec_{in}$. The good selection of this matrix can introduce different properties of generated matrices. In this section, we introduce the initialization of $M_0$ for generating non-Hermitian matrices and non-Symmetric matrices with complex eigenvalues.
+	
+	\subsection{Non-Hermitian Case}
+	
+	In order to generate non-Hermitian matrices, $M_0$ can be constructed as a lower triangular matrix having $h$ non-zero diagonals. The main diagonal is filled with $Spec_{in}$, and the rest $h-1$ lower diagonals are filled with randomly generated values. Fig. \ref{fig:nonhermitian} gives an example of both initial and generated non-Hermitian matrices.
+	
+	\begin{figure*}[htbp]
+		\centering
+		\includegraphics[width=2.9in]{img/non-Herm.pdf}
+		\caption{Matrix generation example.}
+		\label{fig:nonhermitian}
+	\end{figure*}
+
+	\subsection{Non-Symmetric Case}
+	
+	For the non Symmetric matrix whose entries are all real, if exist, they have pairs of conjugate complex eigenvalues which are symmetric to the real axis in the real-imaginary plain. For instance, denote one pair as $a+bi$ and $a-bi$. They are eigenvalues of a $2\times 2$ matrix $B$ as 
+	
+	\[
+	B =
+	\begin{bmatrix}
+	a & b \\
+	-b & a
+	\end{bmatrix}
+	\]
+	
+	In this case, $M_0$ can also be constructed as a lower triangular matrix having $h$ non-zero diagonals. In the first step, $M_0$ can be initialized as a block diagonal matrix, which is constructed with a series $2 \times 2$ matrices like $B$ for all the conjugate eigenvalues, shown as the left figure of Fig. \ref{fig:nilo}. The rest $h-2$ lower diagonals are filled with randomly generated real values. Fig. \ref{fig:nilo} gives an example of both initial and generated non-Hermitian matrices.
+		
+	\begin{figure*}[htbp]
+		\centering
+		\includegraphics[width=2.9in]{img/non-Sym.pdf}
+		\caption{Matrix generation example.}
+		\label{fig:nilo}
+	\end{figure*}
 
 	\newpage
 	
